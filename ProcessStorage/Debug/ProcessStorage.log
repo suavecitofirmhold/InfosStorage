@@ -1,0 +1,11 @@
+﻿  ProcessInfoCache.cpp
+  InfoHandle.cpp
+f:\project\vstest\processstorage\processstorage\infohandle.cpp(29): warning C4996: '_itow': This function or variable may be unsafe. Consider using _itow_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\corecrt_wstdlib.h(67): note: 参见“_itow”的声明
+f:\project\vstest\processstorage\processstorage\infohandle.cpp(58): error C2664: “HRESULT CoCreateGuid(GUID *)”: 无法将参数 1 从“std::string *”转换为“GUID *”
+  f:\project\vstest\processstorage\processstorage\infohandle.cpp(58): note: 与指向的类型无关；转换要求 reinterpret_cast、C 样式转换或函数样式转换
+  正在生成代码...
+  正在编译...
+  CacheInfoMonitor.cpp
+f:\project\vstest\processstorage\processstorage\cacheinfomonitor.cpp(17): warning C4305: “return”: 从“double”到“float”截断
+  正在生成代码...

@@ -1,0 +1,5 @@
+﻿  md5test.cpp
+f:\project\vstest\processstorage\md5test\md5test.cpp(23): warning C4996: '_itow': This function or variable may be unsafe. Consider using _itow_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\corecrt_wstdlib.h(67): note: 参见“_itow”的声明
+  md5test.vcxproj -> F:\project\vstest\ProcessStorage\Debug\md5test.exe
+  md5test.vcxproj -> F:\project\vstest\ProcessStorage\Debug\md5test.pdb (Full PDB)
