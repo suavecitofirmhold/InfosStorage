@@ -13,45 +13,57 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ToolFolder">
+      <UniqueIdentifier>{a5607179-4222-46b8-97a8-4e7c1b1c8a5e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GetProcess.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="LogManager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="SysConfig.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CacheInfoMonitor.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="InfoHandle.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ProcessInfoCache.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Monitor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DataProcessing.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Tool.cpp">
+      <Filter>ToolFolder</Filter>
+    </ClCompile>
+    <ClCompile Include="Service.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CacheInfoMonitor.hpp">
+    <ClInclude Include="GetProcess.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="GetProcess.hpp">
+    <ClInclude Include="ProcessInfoCache.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="InfoHandle.hpp">
+    <ClInclude Include="Config.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="LogManager.hpp">
+    <ClInclude Include="Monitor.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ProcessInfoCache.hpp">
+    <ClInclude Include="DataProcessing.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SysConfig.hpp">
+    <ClInclude Include="Log.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Tool.h">
+      <Filter>ToolFolder</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

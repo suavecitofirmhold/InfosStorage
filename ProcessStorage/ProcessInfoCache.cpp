@@ -1,50 +1,57 @@
-#include "ProcessInfoCache.hpp"
+#include "ProcessInfoCache.h"
 
+ProcessInfoCache* ProcessInfoCache::m_instance = nullptr;
+std::mutex ProcessInfoCache::m_mutex;
 ProcessInfoCache::ProcessInfoCache()
 {
-	log.Init("F:\\Debug_x64");
+	//log.Init("F:\\Debug_x64");
 }
 
+ProcessInfoCache::~ProcessInfoCache()
+{
+	if (nullptr != m_instance)
+	{
+		delete m_instance;
+		m_instance = nullptr;
+	}
+}
 ProcessInfoCache* ProcessInfoCache::GetInstance()
 {
 	if (nullptr == m_instance)
 	{
-		m_instance = new ProcessInfoCache();
+		if (nullptr == m_instance)
+		{
+			std::unique_lock<std::mutex> lock(m_mutex);
+			m_instance = new ProcessInfoCache();
+		}
 	}
 	return m_instance;
 }
 
-void ProcessInfoCache::Push(std::string guid, processInfo& pInfo)
+void ProcessInfoCache::Push(boost::uuids::uuid uuid, const processInfo& pInfo)
 {
-	//std::pair<std::map<std::string, processInfo>, bool> ret;
-	//ret = 
-		m_pInfoMap.insert(std::make_pair(guid, pInfo));
-	//if (!ret.second)
-	//{
-	//	// todo
-	//	log.WriteLog("insert failed");
-	//}
+	std::unique_lock<std::mutex> lock(m_mutex);
+	std::shared_ptr<processInfo> sp(new processInfo(pInfo));
+
+	m_pInfoMap.insert(std::make_pair(uuid, sp));
 }
 
-void ProcessInfoCache::Remove(std::string guid)
+void ProcessInfoCache::Remove(boost::uuids::uuid uuid)
 {
-	auto it = m_pInfoMap.find(guid);
+	std::unique_lock<std::mutex> lock(m_mutex);
+	auto it = m_pInfoMap.find(uuid);
 	if (it != m_pInfoMap.end())
 	{
 		m_pInfoMap.erase(it);
-	}
-	else
-	{
-		// todo
-		log.WriteLog("erase failed");
 	}
 }
 
 void ProcessInfoCache::EraseExpiredData()
 {
+	std::unique_lock<std::mutex> lock(m_mutex);
 	for (auto it = m_pInfoMap.begin(); it != m_pInfoMap.end();)
 	{
-		if (TRUE == it->second.exitFlag)
+		if (0 != it->second->exitTime)
 		{
 			m_pInfoMap.erase(it++);
 		}
@@ -55,26 +62,35 @@ void ProcessInfoCache::EraseExpiredData()
 	}
 }
 
-void ProcessInfoCache::Modify(std::string& guid, processInfo& pInfo)
+void ProcessInfoCache::Modify(const boost::uuids::uuid& uuid, const processInfo& pInfo)
 {
-	m_pInfoMap[guid] = pInfo;
+	std::unique_lock<std::mutex> lock(m_mutex);
+	m_pInfoMap[uuid].reset(new processInfo(pInfo));
 }
 
-void ProcessInfoCache::ModifyExitFlag(std::string& guid, BOOL flag)
+void ProcessInfoCache::SetExitTime(const boost::uuids::uuid& uuid, DWORD time)
 {
-	m_pInfoMap[guid].exitFlag = flag;
+	std::unique_lock<std::mutex> lock(m_mutex);
+	m_pInfoMap[uuid]->exitTime = time;
+}
+std::shared_ptr<processInfo> ProcessInfoCache::GetProcessInfo(const boost::uuids::uuid& uuid)
+{
+	std::unique_lock<std::mutex> lock(m_mutex);
+	return m_pInfoMap[uuid];
 }
 
-void ProcessInfoCache::SetExitTime(std::string& guid)
+void ProcessInfoCache::GetAll(std::map<boost::uuids::uuid, std::shared_ptr<processInfo>>& outMap)
 {
-
-}
-processInfo ProcessInfoCache::GetProcessInfo(std::string& guid)
-{
-	return m_pInfoMap[guid];
-}
-
-void ProcessInfoCache::GetAll(std::map<std::string, processInfo>& outMap)
-{
+	std::unique_lock<std::mutex> lock(m_mutex);
 	outMap = m_pInfoMap;
+}
+
+bool ProcessInfoCache::IsExist(const boost::uuids::uuid& ui)
+{
+	std::unique_lock<std::mutex> lock(m_mutex);
+	if (m_pInfoMap.find(ui) == m_pInfoMap.end())
+	{
+		return false;
+	}
+	return true;
 }

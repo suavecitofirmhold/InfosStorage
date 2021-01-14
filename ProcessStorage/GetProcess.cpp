@@ -2,24 +2,151 @@
 #include <tlhelp32.h>
 #include <tchar.h>
 #include <cstdio>
-#include "LogManager.hpp"
-//  Forward declarations:
-BOOL GetProcessList();
-BOOL ListProcessModules(DWORD dwPID);
-BOOL ListProcessThreads(DWORD dwOwnerPID);
-void printError(TCHAR* msg);
+#include "Log.h"
+#include "GetProcess.h"
+#include "ProcessInfoCache.h"
+#include <psapi.h>
+using namespace std;
 
-int main(void)
+void printError(TCHAR* msg)
 {
-	//GetProcessList();
-	LogManager log;
-	log.Init("F:\\Debug_x64");// 日志文件存放的路径
-	log.WriteLog("start");
-	getchar();
-	return 0;
+	DWORD eNum;
+	TCHAR sysMsg[256];
+	TCHAR* p;
+
+	eNum = GetLastError();
+	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, eNum,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		sysMsg, 256, NULL);
+
+	// Trim the end of the line and terminate it with a null
+	p = sysMsg;
+	while ((*p > 31) || (*p == 9))
+		++p;
+	do { *p-- = 0; } while ((p >= sysMsg) &&
+		((*p == '.') || (*p < 33)));
+
+	// Display the message
+	_tprintf(TEXT("\n  WARNING: %s failed with error %d (%s)"), msg, eNum, sysMsg);
+
 }
 
-BOOL GetProcessList()
+wstring GetProcess::DosDevicePath2LogicalPath(LPCTSTR lpszDosPath)
+{
+	wstring strResult;
+
+	// Translate path with device name to drive letters.
+	TCHAR szTemp[MAX_PATH];
+	szTemp[0] = '\0';
+
+	if (lpszDosPath == NULL || !GetLogicalDriveStrings(_countof(szTemp) - 1, szTemp)) {
+		return strResult;
+	}
+	TCHAR szName[MAX_PATH];
+	TCHAR szDrive[3] = TEXT(" :");
+	BOOL bFound = FALSE;
+	TCHAR* p = szTemp;
+	do {
+		// Copy the drive letter to the template string
+		*szDrive = *p;
+
+		// Look up each device name
+		if (QueryDosDevice(szDrive, szName, _countof(szName))) {
+			UINT uNameLen = (UINT)_tcslen(szName);
+
+			if (uNameLen < MAX_PATH)
+			{
+				bFound = _tcsnicmp(lpszDosPath, szName, uNameLen) == 0;
+
+				if (bFound) {
+					// Reconstruct pszFilename using szTemp
+					// Replace device path with DOS path
+					TCHAR szTempFile[MAX_PATH];
+					_stprintf_s(szTempFile, TEXT("%s%s"), szDrive, lpszDosPath + uNameLen);
+					strResult = szTempFile;
+					wcout << "pathpathpath   :  " << szTempFile << endl;
+				}
+			}
+		}
+		// Go to the next NULL character.
+		while (*p++);
+	} while (!bFound && *p); // end of string
+
+	return strResult;
+}
+LPWSTR GetProcess::GetProcessUserName(DWORD pid)
+{
+	HANDLE hToken = NULL;
+	BOOL bFuncReturn = FALSE;
+	LPWSTR strUserName = _T("");
+	PTOKEN_USER pToken_User = NULL;
+	DWORD dwTokenUser = 0;
+	TCHAR szAccName[MAX_PATH] = { 0 };
+	TCHAR szDomainName[MAX_PATH] = { 0 };
+	HANDLE hProcessToken = NULL;
+	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+	if (hProcess != NULL)
+	{
+		// 提升本进程的权限
+		bFuncReturn = ::OpenProcessToken(hProcess, TOKEN_ALL_ACCESS, &hToken);
+
+		if (bFuncReturn == 0) // 失败
+		{
+			printError(TEXT("OpenProcessToken err"));
+			return strUserName;
+		}
+		if (hToken != NULL)
+		{
+			::GetTokenInformation(hToken, TokenUser, NULL, 0L, &dwTokenUser);
+
+			if (dwTokenUser>0)
+			{
+				pToken_User = (PTOKEN_USER)::GlobalAlloc(GPTR, dwTokenUser);
+			}
+
+			if (pToken_User != NULL)
+			{
+				bFuncReturn = ::GetTokenInformation(hToken, TokenUser, pToken_User, dwTokenUser, &dwTokenUser);
+			}
+
+			if (bFuncReturn != FALSE && pToken_User != NULL)
+			{
+				SID_NAME_USE eUse = SidTypeUnknown;
+
+				DWORD dwAccName = 0L;
+				DWORD dwDomainName = 0L;
+
+				PSID pSid = pToken_User->User.Sid;
+
+				bFuncReturn = ::LookupAccountSid(NULL, pSid, NULL, &dwAccName,
+					NULL, &dwDomainName, &eUse);
+				if (dwAccName>0 && dwAccName < MAX_PATH && dwDomainName>0 && dwDomainName <= MAX_PATH)
+				{
+					bFuncReturn = ::LookupAccountSid(NULL, pSid, szAccName, &dwAccName,
+						szDomainName, &dwDomainName, &eUse);
+				}
+
+				if (bFuncReturn != 0)
+					strUserName = szAccName;
+			}
+		}
+	}
+
+	if (pToken_User != NULL)
+	{
+		::GlobalFree(pToken_User);
+	}
+
+	if (hToken != NULL)
+	{
+		::CloseHandle(hToken);
+	}
+
+	return strUserName;
+}
+
+BOOL GetProcess::GetProcessList()
 {
 	HANDLE hProcessSnap;
 	HANDLE hProcess;
@@ -50,6 +177,7 @@ BOOL GetProcessList()
 	// display information about each process in turn
 	do
 	{
+		processInfo pInfo;
 		_tprintf(TEXT("\n\n====================================================="));
 		_tprintf(TEXT("\nPROCESS NAME:  %s"), pe32.szExeFile);
 		_tprintf(TEXT("\n-------------------------------------------------------"));
@@ -61,7 +189,7 @@ BOOL GetProcessList()
 		FILETIME kernelTime{0, 0};
 		FILETIME userTime{0, 0};
 		BOOL getTimeOk = FALSE;
-		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pe32.th32ProcessID); //  PROCESS_ALL_ACCESS
+		hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID);
 		if (hProcess == NULL)
 			printError(TEXT("OpenProcess"));
 		else
@@ -70,164 +198,58 @@ BOOL GetProcessList()
 			if (!dwPriorityClass)
 				printError(TEXT("GetPriorityClass"));
 			getTimeOk = GetProcessTimes(hProcess, &loadStartTime, &exitTime, &kernelTime, &userTime);
+			LPSTR temp = new char[260];
+			TCHAR tsFileDosPath[MAX_PATH + 1];
+			
+			if (GetProcessImageFileName(hProcess, tsFileDosPath, 128) > 0)
+			{
+				_tprintf(TEXT("\n     tsFileDosPath   = %s"), DosDevicePath2LogicalPath(tsFileDosPath));
+			}
+			else {
+				printError(TEXT("get path failed"));
+			}
+			delete temp;
 			CloseHandle(hProcess);
 		}
-		/*
-		typedef struct tagPROCESSENTRY32W
-		{
-			DWORD   dwSize;
-			DWORD   cntUsage;
-			DWORD   th32ProcessID;          // this process
-			ULONG_PTR th32DefaultHeapID;
-			DWORD   th32ModuleID;           // associated exe
-			DWORD   cntThreads;
-			DWORD   th32ParentProcessID;    // this process's parent process
-			LONG    pcPriClassBase;         // Base priority of process's threads
-			DWORD   dwFlags;
-			WCHAR   szExeFile[MAX_PATH];    // Path
-		} PROCESSENTRY32W;
-		*/
 		_tprintf(TEXT("\n  Process ID        = 0x%08X"), pe32.th32ProcessID);
-		_tprintf(TEXT("\n  Thread count      = %d"), pe32.cntThreads);
 		_tprintf(TEXT("\n  Parent process ID = 0x%08X"), pe32.th32ParentProcessID);
-		_tprintf(TEXT("\n  Priority base     = %d"), pe32.pcPriClassBase);
-		if (dwPriorityClass)
-			_tprintf(TEXT("\n  Priority class    = %d"), dwPriorityClass);
+
+		pInfo.pid = pe32.th32ProcessID;
+		pInfo.ppid = pe32.th32ParentProcessID;
 		
 		if (0 != getTimeOk) {
 			SYSTEMTIME beginTime;
 			::FileTimeToSystemTime(&loadStartTime, &beginTime);
-			DWORD dwBeginTime =
-				beginTime.wHour * 60 * 60 * 1000
-				+ beginTime.wMinute * 60 * 1000
-				+ beginTime.wSecond * 1000
-				+ beginTime.wMilliseconds;
-			SYSTEMTIME endTime;
-			::FileTimeToSystemTime(&exitTime, &endTime);
-			DWORD dwEndTime =
-				endTime.wHour * 60 * 60 * 1000
-				+ endTime.wMinute * 60 * 1000
-				+ endTime.wSecond * 1000
-				+ endTime.wMilliseconds;
-			_tprintf(TEXT("\n  FILETIME LOW  = %d  ,HIGH = %d"), loadStartTime.dwLowDateTime, loadStartTime.dwHighDateTime);
+			DWORD dwBeginTime = dp.ChangeSysTime2NumType(beginTime);
 			_tprintf(TEXT("\n  Hour = %d Minute = %d Second = %d Millisec = %d"), beginTime.wHour, beginTime.wMinute, beginTime.wSecond, beginTime.wMilliseconds);
 			_tprintf(TEXT("\n  Begin Time  = %d"), dwBeginTime);
-			_tprintf(TEXT("\n  End Time  = %d"), dwEndTime);
+			pInfo.startTime = dwBeginTime;
+			// todo : 处理， 然后push到map里面 
+			boost::uuids::uuid ud = dp.DataSupplement(pInfo);
+			if (!ProcessInfoCache::GetInstance()->IsExist(ud)) {
+				continue;
+			}
+			//pInfo.mdFive = GetFileMd5();  uuid用DataSupplement
+			ProcessInfoCache::GetInstance()->Push(ud, pInfo);
 		}
 		// List the modules and threads associated with this process
-		ListProcessModules(pe32.th32ProcessID);
+		//ListProcessModules(pe32.th32ProcessID);
 		//ListProcessThreads(pe32.th32ProcessID);
 
 	} while (Process32Next(hProcessSnap, &pe32));
-
 	CloseHandle(hProcessSnap);
 	return(TRUE);
 }
 
 
-BOOL ListProcessModules(DWORD dwPID)
+int main(void)
 {
-	HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
-	MODULEENTRY32 me32;
-
-	// Take a snapshot of all modules in the specified process.
-	hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
-	if (hModuleSnap == INVALID_HANDLE_VALUE)
-	{
-		printError(TEXT("CreateToolhelp32Snapshot (of modules)"));
-		return(FALSE);
-	}
-
-	// Set the size of the structure before using it.
-	me32.dwSize = sizeof(MODULEENTRY32);
-
-	// Retrieve information about the first module,
-	// and exit if unsuccessful
-	if (!Module32First(hModuleSnap, &me32))
-	{
-		printError(TEXT("Module32First"));  // show cause of failure
-		CloseHandle(hModuleSnap);           // clean the snapshot object
-		return(FALSE);
-	}
-
-	// Now walk the module list of the process,
-	// and display information about each module
-	do
-	{
-		_tprintf(TEXT("\n\n     MODULE NAME:     %s"), me32.szModule);
-		_tprintf(TEXT("\n     Executable     = %s"), me32.szExePath);
-		_tprintf(TEXT("\n     Process ID     = 0x%08X"), me32.th32ProcessID);
-		_tprintf(TEXT("\n     Ref count (g)  = 0x%04X"), me32.GlblcntUsage);
-		_tprintf(TEXT("\n     Ref count (p)  = 0x%04X"), me32.ProccntUsage);
-		_tprintf(TEXT("\n     Base address   = 0x%08X"), (DWORD)me32.modBaseAddr);
-		_tprintf(TEXT("\n     Base size      = %d"), me32.modBaseSize);
-
-	} while (Module32Next(hModuleSnap, &me32));
-
-	CloseHandle(hModuleSnap);
-	return(TRUE);
-}
-
-BOOL ListProcessThreads(DWORD dwOwnerPID)
-{
-	HANDLE hThreadSnap = INVALID_HANDLE_VALUE;
-	THREADENTRY32 te32;
-
-	// Take a snapshot of all running threads  
-	hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-	if (hThreadSnap == INVALID_HANDLE_VALUE)
-		return(FALSE);
-
-	// Fill in the size of the structure before using it. 
-	te32.dwSize = sizeof(THREADENTRY32);
-
-	// Retrieve information about the first thread,
-	// and exit if unsuccessful
-	if (!Thread32First(hThreadSnap, &te32))
-	{
-		printError(TEXT("Thread32First")); // show cause of failure
-		CloseHandle(hThreadSnap);          // clean the snapshot object
-		return(FALSE);
-	}
-
-	// Now walk the thread list of the system,
-	// and display information about each thread
-	// associated with the specified process
-	do
-	{
-		if (te32.th32OwnerProcessID == dwOwnerPID)
-		{
-			_tprintf(TEXT("\n\n     THREAD ID      = 0x%08X"), te32.th32ThreadID);
-			_tprintf(TEXT("\n     Base priority  = %d"), te32.tpBasePri);
-			_tprintf(TEXT("\n     Delta priority = %d"), te32.tpDeltaPri);
-			_tprintf(TEXT("\n"));
-		}
-	} while (Thread32Next(hThreadSnap, &te32));
-
-	CloseHandle(hThreadSnap);
-	return(TRUE);
-}
-
-void printError(TCHAR* msg)
-{
-	DWORD eNum;
-	TCHAR sysMsg[256];
-	TCHAR* p;
-
-	eNum = GetLastError();
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL, eNum,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-		sysMsg, 256, NULL);
-
-	// Trim the end of the line and terminate it with a null
-	p = sysMsg;
-	while ((*p > 31) || (*p == 9))
-		++p;
-	do { *p-- = 0; } while ((p >= sysMsg) &&
-		((*p == '.') || (*p < 33)));
-
-	// Display the message
-	_tprintf(TEXT("\n  WARNING: %s failed with error %d (%s)"), msg, eNum, sysMsg);
-	
+	//GetProcessList();
+	Log log;
+	log.Init("F:\\Debug_x64");// 日志文件存放的路径
+	log.WriteLog("start");
+	GetProcess gp;
+	gp.GetProcessList();
+	getchar();
+	return 0;
 }

@@ -72,7 +72,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>F:\project\openssl\include;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\project\openssl\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\GitRunner\env\boost_1_66_0\lib32-msvc-14.0;F:\project\openssl\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -90,12 +90,17 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <StringPooling>true</StringPooling>
+      <AdditionalIncludeDirectories>F:\project\vstest\ProcessStorage\Tool;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <AdditionalLibraryDirectories>F:\project\openssl\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libboost_thread-vc140-mt-sgd-x32-1_66.lib;libcryptoMTd.lib;libsslMTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -120,6 +125,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <StringPooling>true</StringPooling>
+      <AdditionalIncludeDirectories>F:\project\vstest\ProcessStorage\Tool;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,6 +136,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <AdditionalDependencies>libboost_thread-vc140-mt-sgd-x32-1_66.lib;libcryptoMTd.lib;libsslMTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -147,20 +157,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CacheInfoMonitor.cpp" />
+    <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="GetProcess.cpp" />
-    <ClCompile Include="InfoHandle.cpp" />
-    <ClCompile Include="LogManager.cpp" />
+    <ClCompile Include="DataProcessing.cpp" />
+    <ClCompile Include="Log.cpp" />
     <ClCompile Include="ProcessInfoCache.cpp" />
-    <ClCompile Include="SysConfig.cpp" />
+    <ClCompile Include="Config.cpp" />
+    <ClCompile Include="Service.cpp" />
+    <ClCompile Include="Tool.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CacheInfoMonitor.hpp" />
-    <ClInclude Include="GetProcess.hpp" />
-    <ClInclude Include="InfoHandle.hpp" />
-    <ClInclude Include="LogManager.hpp" />
-    <ClInclude Include="ProcessInfoCache.hpp" />
-    <ClInclude Include="SysConfig.hpp" />
+    <ClInclude Include="Monitor.h" />
+    <ClInclude Include="GetProcess.h" />
+    <ClInclude Include="DataProcessing.h" />
+    <ClInclude Include="Log.h" />
+    <ClInclude Include="ProcessInfoCache.h" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="Tool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

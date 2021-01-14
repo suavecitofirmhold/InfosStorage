@@ -1,11 +1,24 @@
-﻿  ProcessInfoCache.cpp
-  InfoHandle.cpp
-f:\project\vstest\processstorage\processstorage\infohandle.cpp(29): warning C4996: '_itow': This function or variable may be unsafe. Consider using _itow_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\corecrt_wstdlib.h(67): note: 参见“_itow”的声明
-f:\project\vstest\processstorage\processstorage\infohandle.cpp(58): error C2664: “HRESULT CoCreateGuid(GUID *)”: 无法将参数 1 从“std::string *”转换为“GUID *”
-  f:\project\vstest\processstorage\processstorage\infohandle.cpp(58): note: 与指向的类型无关；转换要求 reinterpret_cast、C 样式转换或函数样式转换
+﻿cl : 命令行 warning D9007: “/Gm”需要“/Zi 或 /ZI”；选项被忽略
+  DataProcessing.cpp
+DataProcessing.cpp(45): warning C4996: '_itow': This function or variable may be unsafe. Consider using _itow_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\corecrt_wstdlib.h(67): note: 参见“_itow”的声明
+DataProcessing.cpp(46): warning C4996: '_itow': This function or variable may be unsafe. Consider using _itow_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\corecrt_wstdlib.h(67): note: 参见“_itow”的声明
+  GetProcess.cpp
+GetProcess.cpp(209): warning C4477: “wprintf”: 格式字符串“%s”需要类型“wchar_t *”的参数，但可变参数 1 拥有了类型“std::wstring”
+  Service.cpp
+Service.cpp(13): warning C4477: “printf”: 格式字符串“%s”需要类型“char *”的参数，但可变参数 1 拥有了类型“wchar_t *”
+  Service.cpp(13): note: 请考虑在格式字符串中使用“%ls”
+  Service.cpp(13): note: 请考虑在格式字符串中使用“%lls”
+  Service.cpp(13): note: 请考虑在格式字符串中使用“%Ls”
+  Service.cpp(13): note: 请考虑在格式字符串中使用“%ws”
+  Tool.cpp
+Tool.cpp(14): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stdio.h(205): note: 参见“fopen”的声明
+Tool.cpp(34): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stdio.h(1769): note: 参见“sprintf”的声明
+Tool.cpp(35): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\string.h(90): note: 参见“strcat”的声明
   正在生成代码...
-  正在编译...
-  CacheInfoMonitor.cpp
-f:\project\vstest\processstorage\processstorage\cacheinfomonitor.cpp(17): warning C4305: “return”: 从“double”到“float”截断
-  正在生成代码...
+  ProcessStorage.vcxproj -> F:\project\vstest\ProcessStorage\Debug\ProcessStorage.exe
+  ProcessStorage.vcxproj -> F:\project\vstest\ProcessStorage\Debug\ProcessStorage.pdb (Full PDB)
