@@ -64,7 +64,7 @@ wstring GetProcess::DosDevicePath2LogicalPath(LPCTSTR lpszDosPath)
 					// Replace device path with DOS path
 					TCHAR szTempFile[MAX_PATH];
 					_stprintf_s(szTempFile, TEXT("%s%s"), szDrive, lpszDosPath + uNameLen);
-					strResult = szTempFile;
+					strResult = wstring(szTempFile);
 					wcout << "pathpathpath   :  " << szTempFile << endl;
 				}
 			}
@@ -177,11 +177,12 @@ BOOL GetProcess::GetProcessList()
 	// display information about each process in turn
 	do
 	{
-		processInfo pInfo;
+		std::shared_ptr<processInfo> sp(new processInfo());
+
 		_tprintf(TEXT("\n\n====================================================="));
 		_tprintf(TEXT("\nPROCESS NAME:  %s"), pe32.szExeFile);
 		_tprintf(TEXT("\n-------------------------------------------------------"));
-
+		sp->fileName = wstring(pe32.szExeFile);
 		// Retrieve the priority class.
 		dwPriorityClass = 0;
 		FILETIME loadStartTime{0, 0};
@@ -198,43 +199,42 @@ BOOL GetProcess::GetProcessList()
 			if (!dwPriorityClass)
 				printError(TEXT("GetPriorityClass"));
 			getTimeOk = GetProcessTimes(hProcess, &loadStartTime, &exitTime, &kernelTime, &userTime);
-			LPSTR temp = new char[260];
+			if (0 != getTimeOk) {
+				SYSTEMTIME beginTime;
+				::FileTimeToSystemTime(&loadStartTime, &beginTime);
+				DWORD dwBeginTime = dp.ChangeSysTime2NumType(beginTime);
+				_tprintf(TEXT("\n  Hour = %d Minute = %d Second = %d Millisec = %d"), beginTime.wHour, beginTime.wMinute, beginTime.wSecond, beginTime.wMilliseconds);
+				_tprintf(TEXT("\n  Begin Time  = %d"), dwBeginTime);
+				sp->startTime = dwBeginTime;
+				// todo : 进程命令行信息获取，
+
+				boost::uuids::uuid ud = dp.DataSupplement(pInfo);
+				if (!dp.IsDuplication(ud)) {  // 判断是否重复uuid，重复则不添加
+					continue;
+				}
+				// todo: 获取md5
+				//pInfo.mdFive = GetFileMd5();  uuid用DataSupplement
+			}
+			// 获取进程路径
 			TCHAR tsFileDosPath[MAX_PATH + 1];
-			
 			if (GetProcessImageFileName(hProcess, tsFileDosPath, 128) > 0)
 			{
-				_tprintf(TEXT("\n     tsFileDosPath   = %s"), DosDevicePath2LogicalPath(tsFileDosPath));
+				wstring logicFilePath = DosDevicePath2LogicalPath(tsFileDosPath);
+				_tprintf(TEXT("\n     tsFileDosPath   = %s"), logicFilePath);
+				sp->filePath = logicFilePath;
 			}
 			else {
 				printError(TEXT("get path failed"));
 			}
-			delete temp;
 			CloseHandle(hProcess);
 		}
 		_tprintf(TEXT("\n  Process ID        = 0x%08X"), pe32.th32ProcessID);
 		_tprintf(TEXT("\n  Parent process ID = 0x%08X"), pe32.th32ParentProcessID);
 
-		pInfo.pid = pe32.th32ProcessID;
-		pInfo.ppid = pe32.th32ParentProcessID;
+		sp->pid = pe32.th32ProcessID;
+		sp->ppid = pe32.th32ParentProcessID;
 		
-		if (0 != getTimeOk) {
-			SYSTEMTIME beginTime;
-			::FileTimeToSystemTime(&loadStartTime, &beginTime);
-			DWORD dwBeginTime = dp.ChangeSysTime2NumType(beginTime);
-			_tprintf(TEXT("\n  Hour = %d Minute = %d Second = %d Millisec = %d"), beginTime.wHour, beginTime.wMinute, beginTime.wSecond, beginTime.wMilliseconds);
-			_tprintf(TEXT("\n  Begin Time  = %d"), dwBeginTime);
-			pInfo.startTime = dwBeginTime;
-			// todo : 处理， 然后push到map里面 
-			boost::uuids::uuid ud = dp.DataSupplement(pInfo);
-			if (!ProcessInfoCache::GetInstance()->IsExist(ud)) {
-				continue;
-			}
-			//pInfo.mdFive = GetFileMd5();  uuid用DataSupplement
-			ProcessInfoCache::GetInstance()->Push(ud, pInfo);
-		}
-		// List the modules and threads associated with this process
-		//ListProcessModules(pe32.th32ProcessID);
-		//ListProcessThreads(pe32.th32ProcessID);
+		dp.AddNew(ud, sp);
 
 	} while (Process32Next(hProcessSnap, &pe32));
 	CloseHandle(hProcessSnap);

@@ -28,10 +28,9 @@ ProcessInfoCache* ProcessInfoCache::GetInstance()
 	return m_instance;
 }
 
-void ProcessInfoCache::Push(boost::uuids::uuid uuid, const processInfo& pInfo)
+void ProcessInfoCache::Push(boost::uuids::uuid uuid, std::shared_ptr<processInfo> sp)
 {
 	std::unique_lock<std::mutex> lock(m_mutex);
-	std::shared_ptr<processInfo> sp(new processInfo(pInfo));
 
 	m_pInfoMap.insert(std::make_pair(uuid, sp));
 }

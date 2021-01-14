@@ -34,9 +34,9 @@ DWORD DataProcessing::ChangeSysTime2NumType(SYSTEMTIME& st)
 	return numType;
 }
 
-void DataProcessing::RemoveDuplication()
+bool DataProcessing::IsDuplication(const boost::uuids::uuid& ud)
 {
-
+	return ProcessInfoCache::GetInstance()->IsExist(ud);
 }
 
 boost::uuids::uuid DataProcessing::DataSupplement(const processInfo& info)
@@ -45,4 +45,9 @@ boost::uuids::uuid DataProcessing::DataSupplement(const processInfo& info)
 	std::wstring arr = info.fileName + std::wstring(_itow(info.pid, temp, 10))
 		+ std::wstring(_itow(info.startTime, temp, 10));
 	return GenerateStrBasedUuid(arr);
+}
+
+void DataProcessing::AddNew(const boost::uuids::uuid& ud, std::shared_ptr<processInfo> sp)
+{
+	ProcessInfoCache::GetInstance()->Push(ud, sp);
 }

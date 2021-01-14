@@ -22,7 +22,7 @@ Revision History:
 
 struct processInfo {
 	std::wstring fileName;
-	std::wstring szExeFile;
+	std::wstring filePath;
 	std::wstring userName;
 	std::string mdFive;
 	std::string cmdLine;
@@ -31,11 +31,11 @@ struct processInfo {
 	DWORD ppid;
 	DWORD startTime;
 	DWORD exitTime;
-	processInfo():fileName(L""), szExeFile(L""), userName(L""), exitTime(0){};
+	processInfo():fileName(L""), filePath(L""), userName(L""), exitTime(0){};
 	processInfo(const processInfo& info)
 	{
 		fileName = info.fileName;
-		szExeFile = info.szExeFile;
+		filePath = info.filePath;
 		userName = info.userName;
 		mdFive = info.mdFive;
 		cmdLine = info.cmdLine;
@@ -50,7 +50,7 @@ class ProcessInfoCache
 {
 public:
 	static ProcessInfoCache* GetInstance();
-	void Push(boost::uuids::uuid uuid, const processInfo& pInfo);
+	void Push(boost::uuids::uuid uuid, std::shared_ptr<processInfo> sp);
 	void Remove(boost::uuids::uuid uuid);
 	void EraseExpiredData();
 	void Modify(const boost::uuids::uuid& uuid, const processInfo& pInfo);

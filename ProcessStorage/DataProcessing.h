@@ -23,8 +23,9 @@ public:
 	void ClearExpiredInfo();
 	void GetCurrent(SYSTEMTIME& st);
 	DWORD ChangeSysTime2NumType(SYSTEMTIME& st);
-	void RemoveDuplication();
+	bool IsDuplication(const boost::uuids::uuid& ud);
 	boost::uuids::uuid DataSupplement(const processInfo& info);
+	void AddNew(const boost::uuids::uuid& ud, std::shared_ptr<processInfo> sp);
 
 };
 
