@@ -1,10 +1,12 @@
-// ExampleService.cpp : 定义控制台应用程序的入口点。
-//
 #include <cstdio>
 #include <Windows.h>
 #include <tchar.h>
-#include "Log.h"
-#include "GetProcess.h"
+#include <thread>
+#include "LogInfo.h"
+#include "GetProcessInfo.h"
+#include "Service.h"
+#include "Config.h"
+#include "Monitor.h"
 
 SERVICE_STATUS_HANDLE ssh = NULL; // 全局句柄，保存服务控制请求的句柄
 SERVICE_STATUS ss = { 0 }; //保存服务信息的结构
@@ -13,15 +15,14 @@ void PrintError(wchar_t *err) //打印错误信息到控制台
 	printf("%s ErrorCode : %d\r\n", err, GetLastError());
 }
 
-
-GetProcess gp;
-
 void Init()
 {
-	Log log;
-	log.Init("F:\\Debug_x64");// 日志文件存放的路径
-	log.WriteLog("start");
-	gp.GetProcessList();
+	m_log.Init("F:\\Debug_x64");// 日志文件存放的路径
+	m_log.WriteLog("start");
+	Config cfg;
+	expireTime = cfg.GetExpireTime();
+	refreshTime = cfg.GetRefreshTime();
+	getInfo.Init(m_log, expireTime);
 }
 BOOL InstallService() //安装服务
 {
@@ -32,6 +33,7 @@ BOOL InstallService() //安装服务
 	wcscat_s(SysDir, L"\\ExampleService.exe");
 	if (!CopyFile(DirBuf, SysDir, FALSE))
 	{
+		m_log.WriteLog("CopyFile Fail");
 		PrintError(L"CopyFile Fail");
 		return FALSE;
 	}
@@ -39,15 +41,17 @@ BOOL InstallService() //安装服务
 	SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 	if (!sch)
 	{
+		m_log.WriteLog("OpenSCManager Failed");
 		PrintError(L"OpenSCManager Failed");
 		return FALSE;
 	}
 
-	SC_HANDLE schNewSrv = CreateService(sch, L"ExampleService", L"SampleServiceApp", SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START,
+	SC_HANDLE schNewSrv = CreateService(sch, L"ExampleService", L"InfoServiceApp", SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START,
 		SERVICE_ERROR_NORMAL, SysDir, NULL, NULL, NULL, NULL, NULL);
 
 	if (!schNewSrv)
 	{
+		m_log.WriteLog("CreateService Failed");
 		PrintError(L"CreateService Failed");
 		return FALSE;
 	}
@@ -58,7 +62,7 @@ BOOL InstallService() //安装服务
 	ChangeServiceConfig2(schNewSrv, SERVICE_CONFIG_DESCRIPTION, &sd);
 	CloseServiceHandle(schNewSrv);
 	CloseServiceHandle(sch);
-
+	m_log.WriteLog("Install Service Success!");
 	printf("Install Service Success!");
 	return TRUE;
 }
@@ -159,17 +163,13 @@ VOID WINAPI ServiceMain(
 		PrintError(L"SetServiceStatus 0x02 Fail");
 		return;
 	}
-	//SC_HANDLE scm = OpenSCManager(NULL,NULL,SC_MANAGER_ALL_ACCESS);
-	//SC_HANDLE scml = OpenService(scm,L"ExampleService",SC_MANAGER_ALL_ACCESS);
-	//StartService(scml,0,NULL);
-	//CloseServiceHandle(scml);
-	//CloseServiceHandle(scm);
+
 	Init();
 	while (1)
 	{
-		
+		getInfo.GetProcessList();
 		//do something， 在此处执行程序主逻辑
-		Sleep(1900);
+		Sleep(refreshTime * 6000);
 	}
 
 }
@@ -179,40 +179,40 @@ void usage() //打印帮助信息
 	printf("[[-i Install],[-r UnInstall]]");
 }
 
-//int main(int argc, _TCHAR* argv[]) //入口函数
-//{
-//	if (argc == 2)
-//	{
-//		//if arguments has 2
-//		wchar_t buf[10] = { 0 };
-//		wcscpy_s(buf, argv[1]);
-//		if (0 == wcscmp(buf, L"-i"))
-//		{
-//			if (!InstallService())
-//			{
-//				PrintError(L"Install Service Failed");
-//				return -1;
-//			}
-//		}
-//		else if (0 == wcscmp(buf, L"-r"))
-//		{
-//			if (!UnInstallService())
-//				return -1;
-//			else
-//				return 0;
-//		}
-//	}
-//	else if (argc > 2)
-//	{
-//		usage();
-//		return -1;
-//	}
-//
-//
-//	SERVICE_TABLE_ENTRY srvEntry[] = {
-//		{ L"ExampleService",ServiceMain },
-//		{ NULL,NULL }
-//	};
-//	StartServiceCtrlDispatcher(srvEntry);
-//	return 0;
-//}
+int wmain(int argc, _TCHAR* argv[]) //入口函数
+{
+	if (argc == 2)
+	{
+		//if arguments has 2
+		wchar_t buf[10] = { 0 };
+		wcscpy_s(buf, argv[1]);
+		if (0 == wcscmp(buf, L"-i"))
+		{
+			if (!InstallService())
+			{
+				PrintError(L"Install Service Failed");
+				return -1;
+			}
+		}
+		else if (0 == wcscmp(buf, L"-r"))
+		{
+			if (!UnInstallService())
+				return -1;
+			else
+				return 0;
+		}
+	}
+	else if (argc > 2)
+	{
+		usage();
+		return -1;
+	}
+
+
+	SERVICE_TABLE_ENTRY srvEntry[] = {
+		{ L"ExampleService",ServiceMain },
+		{ NULL,NULL }
+	};
+	StartServiceCtrlDispatcher(srvEntry);
+	return 0;
+}

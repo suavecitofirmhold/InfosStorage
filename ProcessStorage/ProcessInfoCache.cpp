@@ -2,9 +2,9 @@
 
 ProcessInfoCache* ProcessInfoCache::m_instance = nullptr;
 std::mutex ProcessInfoCache::m_mutex;
-ProcessInfoCache::ProcessInfoCache()
+ProcessInfoCache::ProcessInfoCache():m_count(0)
 {
-	//log.Init("F:\\Debug_x64");
+
 }
 
 ProcessInfoCache::~ProcessInfoCache()
@@ -15,6 +15,7 @@ ProcessInfoCache::~ProcessInfoCache()
 		m_instance = nullptr;
 	}
 }
+
 ProcessInfoCache* ProcessInfoCache::GetInstance()
 {
 	if (nullptr == m_instance)
@@ -31,7 +32,7 @@ ProcessInfoCache* ProcessInfoCache::GetInstance()
 void ProcessInfoCache::Push(boost::uuids::uuid uuid, std::shared_ptr<processInfo> sp)
 {
 	std::unique_lock<std::mutex> lock(m_mutex);
-
+	++m_count;
 	m_pInfoMap.insert(std::make_pair(uuid, sp));
 }
 
@@ -42,17 +43,20 @@ void ProcessInfoCache::Remove(boost::uuids::uuid uuid)
 	if (it != m_pInfoMap.end())
 	{
 		m_pInfoMap.erase(it);
+		--m_count;
 	}
 }
 
-void ProcessInfoCache::EraseExpiredData()
+// 超过超时时间就销毁
+void ProcessInfoCache::EraseExpiredData(const unsigned int expireTime, const DWORD nowTime)
 {
 	std::unique_lock<std::mutex> lock(m_mutex);
 	for (auto it = m_pInfoMap.begin(); it != m_pInfoMap.end();)
 	{
-		if (0 != it->second->exitTime)
+		if (expireTime * 60 * 1000 < nowTime - it->second->exitTime) // 单位分钟转换为毫秒
 		{
 			m_pInfoMap.erase(it++);
+			--m_count;
 		}
 		else
 		{

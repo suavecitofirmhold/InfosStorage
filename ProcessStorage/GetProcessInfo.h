@@ -14,12 +14,15 @@ Revision History:
 #include "DataProcessing.h"
 using std::wstring;
 
-class GetProcess {
+class GetProcessInfo {
 public:
+	void Init(LogInfo& log, const unsigned int exp);
 	BOOL GetProcessList();
 	LPWSTR GetProcessUserName(DWORD pid);
 	//void printError(TCHAR* msg);
 	wstring DosDevicePath2LogicalPath(LPCTSTR lpszDosPath);
+	LogInfo m_log;
+	unsigned int m_expireTime;
 private:
 	DataProcessing dp;
 };

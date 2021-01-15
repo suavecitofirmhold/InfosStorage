@@ -1,4 +1,4 @@
-#include "Log.h"
+#include "LogInfo.h"
 #include <iostream>
 #include <string>
 #include <boost/filesystem.hpp>
@@ -21,19 +21,19 @@ namespace sinks = boost::log::sinks;
 namespace expr = boost::log::expressions;
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::logger_mt)
-boost::log::sources::severity_logger<boost::log::trivial::severity_level > Log::s_slg;
+boost::log::sources::severity_logger<boost::log::trivial::severity_level > LogInfo::s_slg;
 
-Log::Log()
+LogInfo::LogInfo()
 {
 
 }
 
-Log::~Log(void)
+LogInfo::~LogInfo(void)
 {
 
 }
 
-void Log::Init(const std::string& dir)
+void LogInfo::Init(const std::string& dir)
 {
 	if (boost::filesystem::exists(dir) == false)
 	{
@@ -61,7 +61,7 @@ void Log::Init(const std::string& dir)
 }
 
 
-void Log::WriteLog(const std::string& msg)
+void LogInfo::WriteLog(const std::string& msg)
 {
 	src::logger lg;
 	BOOST_LOG(lg) << msg;

@@ -2,10 +2,12 @@
 #include <tlhelp32.h>
 #include <tchar.h>
 #include <cstdio>
-#include "Log.h"
-#include "GetProcess.h"
-#include "ProcessInfoCache.h"
 #include <psapi.h>
+#include <set>
+#include "LogInfo.h"
+#include "GetProcessInfo.h"
+#include "ProcessInfoCache.h"
+#include "Tool.h"
 using namespace std;
 
 void printError(TCHAR* msg)
@@ -32,7 +34,7 @@ void printError(TCHAR* msg)
 
 }
 
-wstring GetProcess::DosDevicePath2LogicalPath(LPCTSTR lpszDosPath)
+wstring GetProcessInfo::DosDevicePath2LogicalPath(LPCTSTR lpszDosPath)
 {
 	wstring strResult;
 
@@ -65,7 +67,8 @@ wstring GetProcess::DosDevicePath2LogicalPath(LPCTSTR lpszDosPath)
 					TCHAR szTempFile[MAX_PATH];
 					_stprintf_s(szTempFile, TEXT("%s%s"), szDrive, lpszDosPath + uNameLen);
 					strResult = wstring(szTempFile);
-					wcout << "pathpathpath   :  " << szTempFile << endl;
+					//wcout << "pathpathpath   :  " << szTempFile << endl;
+					wcout << "wstring path   : " << strResult << endl;
 				}
 			}
 		}
@@ -75,7 +78,7 @@ wstring GetProcess::DosDevicePath2LogicalPath(LPCTSTR lpszDosPath)
 
 	return strResult;
 }
-LPWSTR GetProcess::GetProcessUserName(DWORD pid)
+LPWSTR GetProcessInfo::GetProcessUserName(DWORD pid)
 {
 	HANDLE hToken = NULL;
 	BOOL bFuncReturn = FALSE;
@@ -146,8 +149,9 @@ LPWSTR GetProcess::GetProcessUserName(DWORD pid)
 	return strUserName;
 }
 
-BOOL GetProcess::GetProcessList()
+BOOL GetProcessInfo::GetProcessList()
 {
+	m_log.WriteLog("in GetProcessList()");
 	HANDLE hProcessSnap;
 	HANDLE hProcess;
 	PROCESSENTRY32 pe32;
@@ -172,9 +176,8 @@ BOOL GetProcess::GetProcessList()
 		CloseHandle(hProcessSnap);          // clean the snapshot object
 		return(FALSE);
 	}
-
-	// Now walk the snapshot of processes, and
-	// display information about each process in turn
+	std::set<boost::uuids::uuid> uuidSet;
+	
 	do
 	{
 		std::shared_ptr<processInfo> sp(new processInfo());
@@ -195,9 +198,10 @@ BOOL GetProcess::GetProcessList()
 			printError(TEXT("OpenProcess"));
 		else
 		{
-			dwPriorityClass = GetPriorityClass(hProcess);
-			if (!dwPriorityClass)
-				printError(TEXT("GetPriorityClass"));
+			_tprintf(TEXT("\n  Process ID        = 0x%08X"), pe32.th32ProcessID);
+			_tprintf(TEXT("\n  Parent process ID = 0x%08X"), pe32.th32ParentProcessID);
+			sp->pid = pe32.th32ProcessID;
+			sp->ppid = pe32.th32ParentProcessID;
 			getTimeOk = GetProcessTimes(hProcess, &loadStartTime, &exitTime, &kernelTime, &userTime);
 			if (0 != getTimeOk) {
 				SYSTEMTIME beginTime;
@@ -208,12 +212,6 @@ BOOL GetProcess::GetProcessList()
 				sp->startTime = dwBeginTime;
 				// todo : 进程命令行信息获取，
 
-				boost::uuids::uuid ud = dp.DataSupplement(pInfo);
-				if (!dp.IsDuplication(ud)) {  // 判断是否重复uuid，重复则不添加
-					continue;
-				}
-				// todo: 获取md5
-				//pInfo.mdFive = GetFileMd5();  uuid用DataSupplement
 			}
 			// 获取进程路径
 			TCHAR tsFileDosPath[MAX_PATH + 1];
@@ -222,34 +220,45 @@ BOOL GetProcess::GetProcessList()
 				wstring logicFilePath = DosDevicePath2LogicalPath(tsFileDosPath);
 				_tprintf(TEXT("\n     tsFileDosPath   = %s"), logicFilePath);
 				sp->filePath = logicFilePath;
+				// todo: 获取md5
+				//pInfo.mdFive = GetFileMd5();  uuid用DataSupplement
+				string md5 = "";
+				if (0 == GetMd5(sp->filePath, md5))
+				{
+
+				}
 			}
 			else {
 				printError(TEXT("get path failed"));
 			}
+			boost::uuids::uuid ud = dp.DataSupplement(sp);  // 根据关键字获取uuid
+			if (!dp.IsDuplication(ud)) {  // 判断是否重复，不重复则添加
+				dp.AddNew(ud, sp);
+			}
 			CloseHandle(hProcess);
+			uuidSet.insert(ud);
 		}
-		_tprintf(TEXT("\n  Process ID        = 0x%08X"), pe32.th32ProcessID);
-		_tprintf(TEXT("\n  Parent process ID = 0x%08X"), pe32.th32ParentProcessID);
-
-		sp->pid = pe32.th32ProcessID;
-		sp->ppid = pe32.th32ParentProcessID;
-		
-		dp.AddNew(ud, sp);
-
 	} while (Process32Next(hProcessSnap, &pe32));
 	CloseHandle(hProcessSnap);
+	dp.SetExiteTime(uuidSet);
+	dp.ClearExpiredInfo(m_expireTime);
 	return(TRUE);
 }
 
-
-int main(void)
+void GetProcessInfo::Init(LogInfo& log, const unsigned int exp)
 {
-	//GetProcessList();
-	Log log;
-	log.Init("F:\\Debug_x64");// 日志文件存放的路径
-	log.WriteLog("start");
-	GetProcess gp;
-	gp.GetProcessList();
-	getchar();
-	return 0;
+	m_log = log;
+	m_expireTime = exp;
 }
+
+//int main(void)
+//{
+//	//GetProcessList();
+//	LogInfo log;
+//	log.Init("F:\\Debug_x64");// 日志文件存放的路径
+//	log.WriteLog("start");
+//	GetProcessInfo gp;
+//	gp.GetProcessList();
+//	getchar();
+//	return 0;
+//}

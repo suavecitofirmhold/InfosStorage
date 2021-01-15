@@ -18,9 +18,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GetProcess.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ProcessInfoCache.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -28,9 +25,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="DataProcessing.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Log.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Config.cpp">
@@ -42,11 +36,14 @@
     <ClCompile Include="Service.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="GetProcessInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LogInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GetProcess.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="ProcessInfoCache.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -59,11 +56,22 @@
     <ClInclude Include="DataProcessing.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Log.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Tool.h">
       <Filter>ToolFolder</Filter>
     </ClInclude>
+    <ClInclude Include="GetProcessInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Service.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LogInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\md5test\config.ini">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -18,7 +18,7 @@ Revision History:
 //#include <boost/thread.hpp>
 //#include <boost/thread/lock_factories.hpp>
 //#include <boost/thread/mutex.hpp>
-#include "Log.h"
+#include "LogInfo.h"
 
 struct processInfo {
 	std::wstring fileName;
@@ -52,13 +52,17 @@ public:
 	static ProcessInfoCache* GetInstance();
 	void Push(boost::uuids::uuid uuid, std::shared_ptr<processInfo> sp);
 	void Remove(boost::uuids::uuid uuid);
-	void EraseExpiredData();
+	void EraseExpiredData(const unsigned int expireTime, const DWORD nowTime);
 	void Modify(const boost::uuids::uuid& uuid, const processInfo& pInfo);
-	void ModifyExitTime(const boost::uuids::uuid& uuid, DWORD time);
+	//void ModifyExitTime(const boost::uuids::uuid& uuid, DWORD time);
 	void SetExitTime(const boost::uuids::uuid& uuid, DWORD time);
 	std::shared_ptr<processInfo> GetProcessInfo(const boost::uuids::uuid& uuid);
 	void GetAll(std::map<boost::uuids::uuid, std::shared_ptr<processInfo>>& outMap);
 	bool IsExist(const boost::uuids::uuid& ui);
+	unsigned int GetCount()
+	{
+		return m_count;
+	}
 
 	unsigned int GetInfoSize()
 	{
@@ -72,6 +76,6 @@ public:
 private:
 	std::map<boost::uuids::uuid, std::shared_ptr<processInfo>> m_pInfoMap;
 	static ProcessInfoCache* m_instance;
-	
+	unsigned int m_count;
 };
 

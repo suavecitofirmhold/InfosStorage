@@ -20,11 +20,11 @@ Revision History:
 #define LOG_WARNING\
     BOOST_LOG_SEV((MyLog::s_slg),(boost::log::trivial::warning))
 
-class Log
+class LogInfo
 {
 public:
-	Log();
-	~Log();
+	LogInfo();
+	~LogInfo();
 
 	static void Init(const std::string & dir);
 

@@ -9,12 +9,12 @@ Revision History:
 2020-01-13   ≥¬ˆŒ”‚—Ù    ¥¥Ω®
 */
 #pragma once
-class CacheInfoMonitor
+class Monitor
 {
 public:
-	CacheInfoMonitor();
-	~CacheInfoMonitor();
-	float CalcHitRate();
+	Monitor();
+	~Monitor();
+	float CalcHitRate(int count, int totalNum);
 	unsigned int GetInfoSize();
 private:
 	float hitRate;

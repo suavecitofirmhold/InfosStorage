@@ -2,22 +2,27 @@
 #include "ProcessInfoCache.h"
 
 
-CacheInfoMonitor::CacheInfoMonitor():hitRate(0.0),infoSize(0)
+Monitor::Monitor():hitRate(0.0),infoSize(0)
 {
 }
 
 
-CacheInfoMonitor::~CacheInfoMonitor()
+Monitor::~Monitor()
 {
 }
 
-float CacheInfoMonitor::CalcHitRate() 
+float Monitor::CalcHitRate(int hitCount, int totalNum) 
 {
-	// todo
-	return 0.1;
+	if (totalNum == 0)
+	{
+		return 1;
+	}
+	return float(hitCount) / float(totalNum);
 }
 
-unsigned int CacheInfoMonitor::GetInfoSize() 
+unsigned int Monitor::GetInfoSize() 
 {
-	return ProcessInfoCache::GetInstance()->GetInfoSize();
+	unsigned int totalCount = ProcessInfoCache::GetInstance()->GetCount();
+	int structSize = sizeof(processInfo);
+	return totalCount * structSize;
 }

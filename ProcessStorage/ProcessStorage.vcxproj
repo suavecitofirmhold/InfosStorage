@@ -158,9 +158,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Monitor.cpp" />
-    <ClCompile Include="GetProcess.cpp" />
+    <ClCompile Include="GetProcessInfo.cpp" />
     <ClCompile Include="DataProcessing.cpp" />
-    <ClCompile Include="Log.cpp" />
+    <ClCompile Include="LogInfo.cpp" />
     <ClCompile Include="ProcessInfoCache.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="Service.cpp" />
@@ -168,12 +168,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Monitor.h" />
-    <ClInclude Include="GetProcess.h" />
+    <ClInclude Include="GetProcessInfo.h" />
     <ClInclude Include="DataProcessing.h" />
-    <ClInclude Include="Log.h" />
+    <ClInclude Include="LogInfo.h" />
     <ClInclude Include="ProcessInfoCache.h" />
     <ClInclude Include="Config.h" />
+    <ClInclude Include="Service.h" />
     <ClInclude Include="Tool.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\md5test\config.ini" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -13,6 +13,11 @@ class Config
 public:
 	Config();
 	~Config();
-
+	unsigned int GetExpireTime();
+	unsigned int GetRefreshTime();
+	void Init();
+private:
+	unsigned int m_expire;
+	unsigned int m_refresh;
 };
 
